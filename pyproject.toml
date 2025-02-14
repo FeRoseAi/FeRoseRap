@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling", "hatch-requirements-txt"]
+build-backend = "hatchling.build"
+
+[project]
+name = "feroserap"
+description = "Local-LLM chat federated learning framework"
+authors = [{name = "FeRoseAi project"}]
+readme = "README.md"
+requires-python = ">= 3.10"
+dynamic = ["version", "dependencies"]
+
+[tool.hatch.version]
+path = "feroserap/__about__.py"
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
