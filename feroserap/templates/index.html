@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI チャット</title>
+</head>
+<body>
+    <h2>簡単なチャットアプリ</h2>
+    <form method="post">
+        <input type="text" name="user_input" placeholder="メッセージ入力">
+        <button tyoe="submit">送信</button>
+    </form>
+    {% if user_input %}
+        <p><strong>あなたの入力：</strong> {{ user_input }}</p>
+    {% endif %}
+    {% if output %}
+        <p><strong>AIの返答：</strong> {{ output }}</p>
+    {% endif %}
+</body>
