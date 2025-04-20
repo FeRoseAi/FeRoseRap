@@ -1,4 +1,4 @@
-import React, { userState, useState } from "react";
+import React, { useState } from "react";
 import './App.css';
 
 function App() {
@@ -21,7 +21,7 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error("HTTP error! Status: ${response.status}");
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const responseData = await response.json();
       return responseData.generated_text;
@@ -68,20 +68,21 @@ function App() {
   );
 
   return (
-    <div style={{ padding: "20px", maxWidth: "600px", margin: "180px auto 20px auto" }}>
+    <div style={{ padding: "0px", maxWidth: "1000px", margin: "0px auto 150px auto" }}>
+      <h2>ChatGPT-like AI</h2>
       <div className="input-area">
-        <h2>ChatGPT-like AI</h2>
-        <textarea
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          rows="4"
-          cols="50"
-          placeholder="入力してください"
-          />
-          <br />
-          <button onClick={handleSubmit} disabled={loading}>
-            {loading ? "生成中...":"送信"}
-          </button>
+        <div className="input-row">
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            rows="3"
+            cols="50"
+            placeholder="入力してください"
+            />
+            <button onClick={handleSubmit} disabled={loading}>
+              {loading ? "生成中...":"送信"}
+            </button>
+          </div>
       </div>
 
         {chatHistory.map((chat, index) => (
