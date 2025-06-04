@@ -9,32 +9,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [randomSuggestions, setRandomSuggestions] = useState([]);
 
-  // 会話例提示（静的実装）
-  // 会話候補
-  const suggestions = [
-    "今日の天気は？",
-    "おすすめの映画を教えて",
-    "面白い雑学は？",
-    "最近のニュースは？",
-    "おすすめの観光地は？"
-  ]
-
-  // ランダムに3つ選ぶ
-  const getRandomSuggestions = (count = 3) => {
-    const shuffled = [...suggestions].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
-  };
-
-  // 初期表示時にランダム抽出
-  useEffect(() => {
-    setRandomSuggestions(getRandomSuggestions());
-  }, []);
-
-  // 会話例クリック時の処理
-  const handleSuggestionClick = (text) => {
-    setInputText(text);
-  };
-
   // AIの処理
   async function getAIresponse(userMessage) {
     const requestBody = { text: userMessage};
@@ -92,7 +66,50 @@ function App() {
         </span>
       ))}
     </div>
-  );
+  )
+
+  // 会話例提示（静的実装）
+  // 会話候補
+  const suggestions = [
+    "今日の天気は？",
+    "おすすめの映画を教えて",
+    "面白い雑学は？",
+    "最近のニュースは？",
+    "おすすめの観光地は？"
+  ]
+
+  // ランダムに3つ選ぶ
+  const getRandomSuggestions = (count = 3) => {
+    const shuffled = [...suggestions].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+
+  // 初期表示時にランダム抽出
+  useEffect(() => {
+    setRandomSuggestions(getRandomSuggestions());
+  }, []);
+
+  // 会話例クリック時の処理
+  const handleSuggestionClick = async (text) => {
+    //setInputText(text);
+
+    const userMessage = { sender: "user", message: text };
+    const loadingMessage = { sender: "ai", message: LOADING_TEXT };
+
+    setChatHistory((prev) => [...prev, userMessage, loadingMessage]);
+    setLoading(true);
+
+    const aiMessage = await getAIresponse(text);
+
+    // loading を AIの返答に差し替え
+    setChatHistory((prev) => {
+      const newHistory = [...prev];
+      newHistory[newHistory.length - 1] = { sender: "ai", message: aiMessage };
+      return newHistory;
+    });
+
+    setLoading(false);
+  };
 
   return (
     <div style={{ padding: "0px", maxWidth: "1000px", margin: "0px auto 150px auto" }}>
