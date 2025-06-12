@@ -5,13 +5,18 @@ from pydantic import BaseModel
 from pathlib import Path
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from datasets import load_dataset
 import uvicorn
+import json
+import os
 
 app = FastAPI()
 
 # templatesディレクトリの設定
 BASE_DIR = Path(__file__).resolve().parent
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+chat_data_path = BASE_DIR / "chat_data"
+chattext_path = chat_data_path / "chattext.json"
+# templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # CORSの設定(Reactとの通信)
 app.add_middleware(
@@ -22,6 +27,10 @@ app.add_middleware(
     allow_headers = ["*"]
 )
 
+# データセット(JGLUEを利用)
+# train_dataset = load_dataset("llm-book/JGLUE", name="JCommonsenseQA", split="train[:20%]")
+# valid_dataset = load_dataset("llm-book/JGLUE", name="JCommonsenseQA", split="validation[:20%]")
+
 # モデルの設定
 model = AutoModelForCausalLM.from_pretrained("line-corporation/japanese-large-lm-1.7b-instruction-sft")
 tokenizer = AutoTokenizer.from_pretrained("line-corporation/japanese-large-lm-1.7b-instruction-sft", use_fast=False, legacy=False)
@@ -30,10 +39,14 @@ generator = pipeline("text-generation", model=model, tokenizer=tokenizer, device
 # チャットのリクエストデータモデル
 class ChatRequest(BaseModel):
     text: str
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
+    # ユーザーの会話をjson形式でデータに保存する
+    user_input = request.text
+    
     # ユーザーの入力によって始まりの文章を可変とする
-    request_input = request.text + "\nシステム:"
+    request_input = user_input + "\nシステム:"
     text_output = generator(
         request_input,
         max_length=256,
@@ -56,7 +69,34 @@ async def chat(request: ChatRequest):
     else:
         system_reply = generated_text.strip()
 
+    # 質問と回答をjson形式で保存
+    input_text = user_input
+    output_text = system_reply
+
+    if "\n" in input_text:
+        input_text = input_text.replace("\n", "")
+
+    if "\n" in output_text:
+        output_text = output_text.replace("\n", "")
+
+    json_text = {"input_text": input_text, "output_text": output_text}
+
+    if os.path.exists(chattext_path):
+        try:
+            with open(chattext_path, "r", encoding="utf-8") as f:
+                chat_history = json.load(f)
+        except json.JSONDecodeError:
+            chat_history = []
+    else:
+        chat_history = []
+    chat_history.append(json_text)
+    with open(chattext_path, "w", encoding="utf-8") as f:
+        json.dump(chat_history, f, ensure_ascii=False, indent=2)
+
     return {"generated_text": system_reply}
+
+# 学習関数
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
